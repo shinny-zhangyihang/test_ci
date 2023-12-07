@@ -1,0 +1,33 @@
+name: check and build
+
+on:
+  pull_request:
+    types: 
+      - closed
+
+jobs:
+  notify-slack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      
+      - name: Wait for merge commit SHA
+        run: |
+          echo "Waiting for merge commit SHA to be available"
+          sleep 10
+
+      - name: Notify slack
+        uses: someimportantcompany/github-actions-slack-message@v1
+        if:  github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master'
+        with:
+          channel: C069JSGU62C
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          text: |
+            版本号: *${{ github.event.pull_request.merge_commit_sha }}*
+            PR 标题: ${{ github.event.pull_request.title }} 
+            PR 正文: 
+            ${{ github.event.pull_request.body }}
+          color: success
